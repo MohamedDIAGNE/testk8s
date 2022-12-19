@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reporter
+  template:
+    metadata:
+      labels:
+        app: reporter
+    spec:
+      containers:
+        - name: reporter
+          image: us-west2-docker.pkg.dev/cka-project-367522/jmeter-docker-repo/reporter-grafana:tag1
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "chown grafana /var/lib/grafana; chgrp grafana /var/lib/grafana;chown influxdb /var/lib/influxdb; chgrp influxdb /var/lib/influxdb;service influxdb start;service grafana-server start;while true; do sleep 30; done;" ]
+          resources:
+            limits:
+              cpu: "1"
+              memory: 500Mi
+            requests:
+              cpu: 500m
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/Influxdb
+            - name: influx-volume
+              mountPath: /var/lib/influxdb
+            - name: grafana-volume
+              mountPath: /var/lib/grafana
+          ports:
+            - containerPort: 3000
+            - containerPort: 8086
+              name: api
+      volumes:
+      - name: config-volume
+        configMap:
+         name: influxdb-config
+      - name: influx-volume
+        persistentVolumeClaim:
+          claimName: gcp-influx-disk
+      - name: grafana-volume
+        persistentVolumeClaim:
+          claimName: gcp-grafana-disk
+      tolerations:
+        - key: "sku"
+          operator: "Equal"
+          value: "reporter"
+          effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reporter
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: reporter

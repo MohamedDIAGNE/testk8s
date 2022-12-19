@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-west2-docker.pkg.dev/cka-project-367522/jmeter-docker-repo/jmeter-slave:tag1', '.' ]
+images:
+- 'us-west2-docker.pkg.dev/cka-project-367522/jmeter-docker-repo/jmeter-slave:tag1'
