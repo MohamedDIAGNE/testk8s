@@ -1,3 +1,4 @@
+# Command
 kubectl apply -f gcp-premium.yaml
 kubectl apply -f influxdb_svc.yaml
 kubectl apply -f jmeter_influx_configmap.yaml
